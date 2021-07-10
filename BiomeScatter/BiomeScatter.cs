@@ -24,7 +24,7 @@ namespace TonyTest
     public class BiomeScatter : ModLoader<PQSMod_BiomeScatter>
     {
         // Loader for a Ground Scatter from Kopernicus
-        [RequireConfigType(ConfigType.Node)]
+        /*[RequireConfigType(ConfigType.Node)]
         public class LandClassScatterLoader : IPatchable, ITypeParser<PQSLandControl.LandClassScatter>
         {
             // The value we are editing
@@ -530,8 +530,10 @@ namespace TonyTest
             }
         }
         
+        */
+        
         // Loader for the Amount of a Scatter on a body
-        [RequireConfigType(ConfigType.Node)]
+        /*[RequireConfigType(ConfigType.Node)]
         public class LandClassScatterAmountLoader : IPatchable, ITypeParser<PQSLandControl.LandClassScatterAmount>
         {
             // The value we are editing
@@ -540,7 +542,6 @@ namespace TonyTest
             // Should we delete the ScatterAmount?
             [ParserTarget("delete")]
             [KittopiaHideOption]
-            [SuppressMessage("ReSharper", "FieldCanBeMadeReadOnly.Global")]
             public NumericParser<Boolean> Delete = false;
 
             // density
@@ -587,14 +588,14 @@ namespace TonyTest
             {
                 return new LandClassScatterAmountLoader(value);
             }
-        }
+        }*/
         
         
         [RequireConfigType(ConfigType.Node)]
-        public class ScatterClassLoader : IPatchable, ITypeParser<ScatterClass>
+        public class ScatterClassLoader : IPatchable, ITypeParser<PQSMod_BiomeScatter.ScatterClass>
         {
             // The value we are editing
-            public ScatterClass Value { get; set; }
+            public PQSMod_BiomeScatter.ScatterClass Value { get; set; }
 
             // Should we delete the LandClass?
             [ParserTarget("delete")]
@@ -620,20 +621,20 @@ namespace TonyTest
             // List of scatters used
             [ParserTargetCollection("Scatters", AllowMerge = true)]
             [ParserTargetCollection("scatters", AllowMerge = true)]
-            public CallbackList<LandClassScatterAmountLoader> Scatter { get; set; }
+            public CallbackList<LandControl.LandClassScatterAmountLoader> Scatter { get; set; }
 
             // Default constructor
             [KittopiaConstructor(KittopiaConstructor.ParameterType.Empty)]
             public ScatterClassLoader()
             {
-                Value = new ScatterClass
+                Value = new PQSMod_BiomeScatter.ScatterClass
                 {
                     className = "Base",
                     biomeName = "None"
                 };
 
                 // Create the scatter list
-                Scatter = new CallbackList<LandClassScatterAmountLoader>(e =>
+                Scatter = new CallbackList<LandControl.LandClassScatterAmountLoader>(e =>
                 {
                     Value.scatters = Scatter.Where(s => !s.Delete).Select(s => s.Value).ToArray();
                 });
@@ -641,12 +642,12 @@ namespace TonyTest
             }
 
             // Runtime constructor
-            public ScatterClassLoader(ScatterClass value)
+            public ScatterClassLoader(PQSMod_BiomeScatter.ScatterClass value)
             {
                 Value = value;
 
                 // Create the scatter list
-                Scatter = new CallbackList<LandClassScatterAmountLoader>(e =>
+                Scatter = new CallbackList<LandControl.LandClassScatterAmountLoader>(e =>
                 {
                     Value.scatters = Scatter.Where(s => !s.Delete).Select(s => s.Value).ToArray();
                 });
@@ -657,7 +658,7 @@ namespace TonyTest
                     for (Int32 i = 0; i < Value.scatters.Length; i++)
                     {
                         // Only activate the callback if we are adding the last loader
-                        Scatter.Add(new LandClassScatterAmountLoader(Value.scatters[i]),
+                        Scatter.Add(new LandControl.LandClassScatterAmountLoader(Value.scatters[i]),
                             i == Value.scatters.Length - 1);
                     }
                 }
@@ -670,7 +671,7 @@ namespace TonyTest
             /// <summary>
             /// Convert Parser to Value
             /// </summary>
-            public static implicit operator ScatterClass(ScatterClassLoader parser)
+            public static implicit operator PQSMod_BiomeScatter.ScatterClass(ScatterClassLoader parser)
             {
                 return parser.Value;
             }
@@ -678,7 +679,7 @@ namespace TonyTest
             /// <summary>
             /// Convert Value to Parser
             /// </summary>
-            public static implicit operator ScatterClassLoader(ScatterClass value)
+            public static implicit operator ScatterClassLoader(PQSMod_BiomeScatter.ScatterClass value)
             {
                 return new ScatterClassLoader(value);
             }
@@ -688,7 +689,7 @@ namespace TonyTest
         // List of scatters
         [ParserTargetCollection("Scatters", AllowMerge = true)]
         [ParserTargetCollection("scatters", AllowMerge = true)]
-        public CallbackList<LandClassScatterLoader> Scatters { get; set; }
+        public CallbackList<LandControl.LandClassScatterLoader> Scatters { get; set; }
 
         // List of landclasses
         [ParserTargetCollection("Classes", AllowMerge = true)]
@@ -698,12 +699,13 @@ namespace TonyTest
         // Creates the a PQSMod of type T with given PQS
         public override void Create(PQS pqsVersion)
         {
+            Debug.Log("[BIOME] 1");
             base.Create(pqsVersion);
 
             // Create the callback list for Scatters
-            Scatters = new CallbackList<LandClassScatterLoader>(e =>
+            Scatters = new CallbackList<LandControl.LandClassScatterLoader>(e =>
             {
-                foreach (LandClassScatterLoader loader in Scatters)
+                foreach (LandControl.LandClassScatterLoader loader in Scatters)
                 {
                     loader.Scatter.transform.parent = Mod.transform;
                 }
@@ -716,6 +718,7 @@ namespace TonyTest
             // Create the callback list for LandClasses
             ScatterClasses = new CallbackList<ScatterClassLoader>(e =>
             {
+                Debug.Log("[BIOME] Number of amounts : " + e.Scatter.Count);
                 // Assign each scatter amount with their corresponding scatter
                 foreach (PQSLandControl.LandClassScatterAmount amount in e.Scatter)
                 {
@@ -739,21 +742,24 @@ namespace TonyTest
                 }
 
                 // Assign the new values
-                Mod.classes = ScatterClasses.Where(landClass => !landClass.Delete)
+                Mod.scatterClasses = ScatterClasses.Where(landClass => !landClass.Delete)
                     .Select(landClass => landClass.Value).ToArray();
+                Debug.Log("[BIOME] Length2 : " + Mod.scatterClasses.Length);
             });
-            Mod.classes = new ScatterClass[0];
+            Mod.scatterClasses = new PQSMod_BiomeScatter.ScatterClass[0];
+            Debug.Log("[BIOME] Length : " + Mod.scatterClasses.Length);
         }
 
         // Grabs a PQSMod of type T from a parameter with a given PQS
         public override void Create(PQSMod_BiomeScatter mod, PQS pqsVersion)
         {
+            Debug.Log("[BIOME] 2");
             base.Create(mod, pqsVersion);
 
             // Create the callback list for Scatters
-            Scatters = new CallbackList<LandClassScatterLoader>(e =>
+            Scatters = new CallbackList<LandControl.LandClassScatterLoader>(e =>
             {
-                foreach (LandClassScatterLoader loader in Scatters)
+                foreach (LandControl.LandClassScatterLoader loader in Scatters)
                 {
                     loader.Scatter.transform.parent = Mod.transform;
                 }
@@ -768,7 +774,7 @@ namespace TonyTest
                 for (Int32 i = 0; i < Mod.scatters.Length; i++)
                 {
                     // Only activate the callback if we are adding the last loader
-                    Scatters.Add(new LandClassScatterLoader(Mod.scatters[i]), i == Mod.scatters.Length - 1);
+                    Scatters.Add(new LandControl.LandClassScatterLoader(Mod.scatters[i]), i == Mod.scatters.Length - 1);
                 }
             }
             else
@@ -802,22 +808,22 @@ namespace TonyTest
                 }
 
                 // Assign the new values
-                Mod.classes = ScatterClasses.Where(landClass => !landClass.Delete)
+                Mod.scatterClasses = ScatterClasses.Where(landClass => !landClass.Delete)
                     .Select(landClass => landClass.Value).ToArray();
             });
 
             // Load LandClasses
-            if (Mod.classes != null)
+            if (Mod.scatterClasses != null)
             {
-                for (Int32 i = 0; i < Mod.classes.Length; i++)
+                for (Int32 i = 0; i < Mod.scatterClasses.Length; i++)
                 {
                     // Only activate the callback if we are adding the last loader
-                    ScatterClasses.Add(new ScatterClassLoader(Mod.classes[i]), i == Mod.classes.Length - 1);
+                    ScatterClasses.Add(new ScatterClassLoader(Mod.scatterClasses[i]), i == Mod.scatterClasses.Length - 1);
                 }
             }
             else
             {
-                Mod.classes = new ScatterClass[0];
+                Mod.scatterClasses = new PQSMod_BiomeScatter.ScatterClass[0];
             }
         }
     }

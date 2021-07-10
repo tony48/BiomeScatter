@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace TonyTest
 {
-    [Serializable]
+    /*[Serializable]
     public class ScatterClass
     {
         public String className;
         public String biomeName;
         public PQSLandControl.LandClassScatterAmount[] scatters;
-    }
+    }*/
 }

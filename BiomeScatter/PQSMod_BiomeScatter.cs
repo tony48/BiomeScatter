@@ -12,7 +12,15 @@ namespace TonyTest
     // ReSharper disable once InconsistentNaming
     public class PQSMod_BiomeScatter : PQSMod
     {
-        public ScatterClass[] classes;
+        
+        [Serializable]
+        public class ScatterClass
+        {
+            public string className;
+            public string biomeName;
+            public PQSLandControl.LandClassScatterAmount[] scatters;
+        }
+        public ScatterClass[] scatterClasses;
         public PQSLandControl.LandClassScatter[] scatters;
         private int scatterCount;
         private double[] scScatterList;
@@ -53,10 +61,16 @@ namespace TonyTest
         
         public override void OnSetup()
         {
-            requirements = PQS.ModiferRequirements.VertexMapCoords | PQS.ModiferRequirements.MeshColorChannel;
-            Debug.LogWarning("[BIOME] Value of classes " + classes.Length.ToString());
-            ScatterClass[] array = classes;
             
+            requirements = PQS.ModiferRequirements.VertexMapCoords | PQS.ModiferRequirements.MeshColorChannel;
+            Debug.Log("Coucou");
+            Debug.Log("[Biome] number of scatters " + scatters.Length);
+            Debug.Log("[BIOME] scatt is null " + (scatters == null).ToString());
+            Debug.Log("[BIOME] classes is null " + (scatterClasses == null));
+            ScatterClass[] array = scatterClasses;
+            Debug.Log("[BIOME] array is null " + (array == null).ToString());
+            Debug.Log("Array Length " + array.Length);
+
             for (int i = 0; i < array.Length; i++)
             {
                 for (int j = 0; j < array[i].scatters.Length; j++)
@@ -115,9 +129,9 @@ namespace TonyTest
 
         public override void OnVertexBuild(PQS.VertexBuildData data)
         {
-            for (int i = 0; i < classes.Length; i++)
+            for (int i = 0; i < scatterClasses.Length; i++)
             {
-                ScatterClass sc = classes[i];
+                ScatterClass sc = scatterClasses[i];
                 if (data.allowScatter && scatterActive)
                 {
                     PQSLandControl.LandClassScatterAmount[] scatter = sc.scatters;
